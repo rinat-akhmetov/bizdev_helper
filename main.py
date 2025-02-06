@@ -64,8 +64,13 @@ def search_perplexity(prompt: str) -> PerplexityResponse:
         "frequency_penalty": 1,
         "response_format": None,
     }
-    headers = {"Authorization": f"Bearer {PERPLEXITY_API}", "Content-Type": "application/json"}
-    response = requests.post("https://api.perplexity.ai/chat/completions", json=payload, headers=headers)
+    headers = {
+        "Authorization": f"Bearer {PERPLEXITY_API}",
+        "Content-Type": "application/json",
+    }
+    response = requests.post(
+        "https://api.perplexity.ai/chat/completions", json=payload, headers=headers
+    )
     return PerplexityResponse.model_validate_json(response.text)
 
 
@@ -144,15 +149,20 @@ if st.button("Analyze Company"):
         # Process each question group
         for group_title, questions in group_questions.items():
             current_group += 1
-            progress_text.markdown(f"Processing group {current_group} of {total_groups}: **{group_title}**")
+            progress_text.markdown(
+                f"Processing group {current_group} of {total_groups}: **{group_title}**"
+            )
 
             # Format the questions with the company name
-            formatted_questions = [q.format(company_name=company_name) for q in questions]
+            formatted_questions = [
+                q.format(company_name=company_name) for q in questions
+            ]
 
             # Call the search_perplexity function in parallel
             try:
                 responses = Parallel(n_jobs=-1)(
-                    delayed(search_perplexity)(question) for question in formatted_questions
+                    delayed(search_perplexity)(question)
+                    for question in formatted_questions
                 )
             except Exception as e:
                 st.error(f"Error retrieving data for group '{group_title}': {e}")
@@ -200,33 +210,31 @@ if st.button("Analyze Company"):
                         {
                             "role": "user",
                             "content": f"""
-I am a business development professional at a consulting company that specializes in Data, Machine Learning, and Software Engineering.
- Our company has a proven track record in AI and in developing scalable pipelines for processing and analyzing data.
+I am a business development professional at a consulting company specializing in Data, Machine Learning, and Software Engineering. We have proven expertise in AI and scalable data pipelines. For my upcoming call, I need a discussion guide that focuses on our Provectus IDP offering—with a backup "moon shot" AI idea—customized to the prospect.
 
-I have an upcoming call with a new customer and I want to make sure I cover the following key areas:
+## 1. Company Summary
+- **Overview:** Provide a brief summary of the company based on the searched information.
+- **Services:** Summarize the company’s main services.
+- **Public/Private Status:** 
+  - If public, include the stock ticker, a summary of the stock trend over the last 12 months, and a brief 10-K summary.
+  - If private, summarize the “Crunchbase health” (e.g., when they last raised a funding round and total funding) along with 1-2 sentences on the overall company health.
 
-1. **Identify New Business Opportunities**:  
-   - What topics or questions can I use to uncover potential challenges or opportunities in their current processes?
-   - How can I help them discover areas where our expertise in data, ML, and AI can add value?
+## 2. Provectus IDP Value Thesis
+- **Thesis Statement:** Summarize in 1-2 sentences how Provectus IDP can help the company save money and improve end user outcomes.
+  
+## 3. Identified New Business Opportunities
+- **Topics to Explore:**  
+  - **Primary:** Why would Provectus IDP be a great fit for your company?
+  - **Fallback:** If IDP is not the right fit, discuss 1-2 cool AI use cases as an alternative.
+- **Open-Ended Questions:**  
+  - Customize questions for IDP use cases, focusing on ML/AI in the context of life sciences.
+  - Provide conversation starters specifically tailored to explore the benefits of Provectus IDP.
 
-2. **Develop and Nurture Client Relationships**:  
-   - What conversation starters and questions will help build rapport and trust?
-   - How can I express genuine interest in understanding their business, goals, and challenges?
-   - What are some effective phrases to demonstrate our commitment to a long-term partnership?
+## 4. Develop and Nurture Client Relationships
+- **Key Questions:** Provide 1-2 concise, prompting questions to help build rapport and further explore how Provectus IDP aligns with their needs.
 
-3. **Drive the Sales Process**:  
-   - How can I smoothly transition from understanding their needs to discussing how our solutions can meet those needs?
-   - What key points should I emphasize to align our services with their business objectives?
-   - What phrases or strategies will guide the conversation toward concrete next steps without being too aggressive?
-
-Please generate a comprehensive discussion guide that includes:
-- A list of topics and openeded questions for each of the three focus areas.
-- Phrases and conversation starters tailored for a business development call.
-- Strategies to ensure a natural flow from discovery to potential sales engagement.
-- Any additional insights or best practices relevant to our industry.
-
-Here is the additional information about the company: {combined_info}.
-
+**Additional Information:**  
+Here is the searched information about the company: {combined_info}
 
 *Please format your response using Markdown for clarity and ease of reading.*
 """,
